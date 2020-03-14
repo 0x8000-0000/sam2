@@ -1,0 +1,9 @@
+[submodule "pegtl"]
+	path = external/PEGTL
+	url = https://github.com/taocpp/PEGTL
+[submodule "gtest"]
+	path = external/googletest
+	url = https://github.com/google/googletest
+[submodule "fmt"]
+	path = external/fmt
+	url = https://github.com/fmtlib/fmt
