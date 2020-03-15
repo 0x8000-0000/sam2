@@ -1,5 +1,5 @@
 /*
-   Copyright 2019 Florin Iucha
+   Copyright 2020 Florin Iucha
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,11 +15,15 @@
 */
 
 #include <algorithm>
+#include <array>
+#include <cassert>
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <iterator>
+#include <optional>
 #include <ostream>
-#include <stack>
+#include <sstream>
 #include <vector>
 
 class Normalizer
@@ -33,36 +37,153 @@ public:
 
 private:
    static constexpr size_t k_BufferSize = 64 * 1024;
+   static constexpr size_t k_MaxIndent  = 1024;
 
    struct Accumulator
    {
-      explicit Accumulator(std::ostream& out) : output{out}
+      static constexpr size_t k_Indent = 4;
+
+      explicit Accumulator(std::ostream& out) : output{out}, spaces(/* __n = */ k_MaxIndent, /* __v = */ ' ')
       {
+         indents.reserve(k_MaxIndent);
       }
 
-      std::ostream&        output;
-      std::stack<unsigned> indents;
-      unsigned             previousIndent = 0;
+      std::ostream&       output;
+      std::vector<size_t> indents;
+      size_t              currentIndent    = 0;
+      bool                lastLineWasEmpty = false;
 
-      void pushLine(size_t indent, const char* base, size_t length);
+      std::optional<std::string> pushLine(size_t indent, const char* base, size_t length);
+
+      static constexpr std::array<char, 3> k_indentMarker   = {'{', '{', '\n'};
+      static constexpr std::array<char, 3> k_deindentMarker = {'}', '}', '\n'};
+
+      std::vector<char> spaces;
    };
+
+   void pushLine(size_t lineNumber, size_t indent, const char* base, size_t length);
 
    Accumulator m_accumulator;
 };
 
-void Normalizer::Accumulator::pushLine(size_t /* indent */, const char* base, size_t length)
+std::optional<std::string> Normalizer::Accumulator::pushLine(size_t indent, const char* base, size_t length)
 {
+   if (length == 0)
+   {
+      if (!lastLineWasEmpty)
+      {
+         output.put('\n');
+      }
+
+      lastLineWasEmpty = true;
+
+      return std::nullopt;
+   }
+
+   lastLineWasEmpty = false;
+
+   if (indent == currentIndent)
+   {
+      // continue
+   }
+   else if (indent > currentIndent)
+   {
+      indents.push_back(currentIndent);
+      currentIndent = indent;
+
+      output.write(k_indentMarker.data(), k_indentMarker.size());
+   }
+   else
+   {
+      if (indents.empty())
+      {
+         std::ostringstream error;
+         error << "No previous indent level; current level: " << currentIndent << " observed: " << indent;
+         return std::optional<std::string>(error.str());
+      }
+
+      std::ostringstream detail;
+      detail << "This indent: " << indent << " current: " << currentIndent << " history: ";
+      std::ostream_iterator<int> outIter{detail, ", "};
+      std::copy(indents.cbegin(), indents.cend(), outIter);
+
+      if (indent == indents.back())
+      {
+         // shortcut; most indents go back just one level
+         currentIndent = indent;
+         output.write(k_indentMarker.data(), k_indentMarker.size());
+         indents.pop_back();
+      }
+      else
+      {
+         const auto iter = std::lower_bound(indents.cbegin(), indents.cend(), indent);
+         assert(iter != indents.cbegin());
+
+         if (iter == indents.cend())
+         {
+            std::cerr << detail.str() << '\n';
+
+            std::ostringstream error;
+            error << "Excessive indent; current level: " << currentIndent << " observed: " << indent;
+            return std::optional<std::string>(error.str());
+         }
+
+         if (*iter != indent)
+         {
+            std::cerr << detail.str() << '\n';
+
+            std::ostringstream error;
+            error << "Excessive indent; current level: " << currentIndent << " observed: " << indent
+                  << " expected: " << *iter;
+            return std::optional<std::string>(error.str());
+         }
+
+         const auto deindentLevels = std::distance(iter, indents.cend());
+
+         for (ssize_t ii = 0; ii < deindentLevels; ++ii)
+         {
+            output.write(k_deindentMarker.data(), k_deindentMarker.size());
+         }
+
+         indents.erase(iter, indents.end());
+         assert(!indents.empty());
+
+         currentIndent = indent;
+      }
+   }
+
+   auto reindent = k_Indent * indents.size();
+   if (reindent > k_MaxIndent)
+   {
+      reindent = k_MaxIndent;
+   }
+
+   output.write(spaces.data(), static_cast<std::streamsize>(reindent));
+
    output.write(base, static_cast<std::streamsize>(length));
    output.put('\n');
+
+   return std::nullopt;
+}
+
+void Normalizer::pushLine(size_t lineNumber, size_t indent, const char* base, size_t length)
+{
+   const auto err = m_accumulator.pushLine(indent, base, length);
+   if (err)
+   {
+      std::cerr << "Error on line " << lineNumber << ": " << err.value() << '\n';
+   }
 }
 
 size_t Normalizer::normalize(std::istream& input)
 {
-   std::vector<char> buffer(k_BufferSize, '\0');
+   std::vector<char> buffer(/* __n = */ k_BufferSize, /* __v = */ '\0');
 
    std::size_t count = 0;
 
    size_t lastPartialLineLength = 0;
+
+   size_t lineNumber = 1;
 
    while (!input.eof())
    {
@@ -108,7 +229,7 @@ size_t Normalizer::normalize(std::istream& input)
             if (lastBuffer)
             {
                // empty line on last buffer
-               m_accumulator.pushLine(indent, nullptr, 0);
+               pushLine(lineNumber, indent, nullptr, 0);
             }
             else
             {
@@ -130,7 +251,7 @@ size_t Normalizer::normalize(std::istream& input)
          {
             if (lastBuffer)
             {
-               m_accumulator.pushLine(indent, &buffer[lineStart], pos - lineStart);
+               pushLine(lineNumber, indent, &buffer[lineStart], pos - lineStart);
             }
             else
             {
@@ -150,10 +271,11 @@ size_t Normalizer::normalize(std::istream& input)
             continue;
          }
 
-         m_accumulator.pushLine(indent, &buffer[lineStart], pos - lineStart);
+         pushLine(lineNumber, indent, &buffer[lineStart], pos - lineStart);
 
          // skip over the new line
          ++pos;
+         ++lineNumber;
       }
    }
 
