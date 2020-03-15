@@ -15,16 +15,11 @@
 */
 
 #include "normalizer.h"
+#include "sam2_parser.h"
 
-#include <algorithm>
-#include <array>
-#include <cassert>
 #include <fstream>
-#include <ios>
 #include <iostream>
-#include <iterator>
 #include <sstream>
-
 
 int main(int argc, char* argv[])
 {
@@ -34,13 +29,16 @@ int main(int argc, char* argv[])
       return 1;
    }
 
-   std::ifstream input(argv[1]);
-   std::ofstream output(argv[2]);
+   std::ifstream input{argv[1]};
+   std::ostringstream dedentStream;
 
-   sam2::Normalizer normalizer{output};
+   sam2::Normalizer normalizer{dedentStream};
 
-   const auto size = normalizer.normalize(input);
-   std::cerr << "Processed " << size << " bytes\n";
+   normalizer.normalize(input);
+
+   const auto doc = sam2::parse(dedentStream.str());
+
+   std::cerr << "Found " << doc.getBlockCount() << " top level blocks\n";
 
    return 0;
 }

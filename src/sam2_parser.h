@@ -14,33 +14,33 @@
    limitations under the License.
 */
 
-#include "normalizer.h"
+#ifndef SAM2_PARSER_H_INCLUDED
+#define SAM2_PARSER_H_INCLUDED
 
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <fstream>
-#include <ios>
-#include <iostream>
-#include <iterator>
-#include <sstream>
+#include <string_view>
+#include <vector>
 
-
-int main(int argc, char* argv[])
+namespace sam2
 {
-   if (argc < 2)
-   {
-      std::cerr << "Error: input / output arguments missing\n";
-      return 1;
-   }
+class Block
+{
+};
 
-   std::ifstream input(argv[1]);
-   std::ofstream output(argv[2]);
+class Document
+{
+   public:
+      size_t getBlockCount() const noexcept
+      {
+         return m_blocks.size();
+      }
 
-   sam2::Normalizer normalizer{output};
+   private:
+      std::vector<Block> m_blocks;
+};
 
-   const auto size = normalizer.normalize(input);
-   std::cerr << "Processed " << size << " bytes\n";
+Document parse(std::string_view input);
+} // namespace sam2
 
-   return 0;
-}
+
+
+#endif // SAM2_PARSER_H_INCLUDED
