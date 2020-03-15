@@ -4,7 +4,8 @@ target_link_libraries (unindent PRIVATE project_options project_warnings)
 target_link_libraries (unindent PRIVATE fmt)
 
 
-add_executable (validate validate.cpp normalizer.cpp sam2_parser.cpp)
+add_executable (validate validate.cpp normalizer.cpp sam2_parser.cpp
+   sam2_parser_impl.cpp)
 
 target_link_libraries (validate PRIVATE project_options project_warnings)
 target_link_libraries (validate PRIVATE fmt)

@@ -81,20 +81,19 @@ template <>
 struct Action<Text>
 {
    template <typename Input>
-   static void apply(const Input& in, sam2::Document& /* doc */)
+   static void apply(const Input& in, sam2::Document& doc)
    {
-      std::cerr << "Text: " << in.string() << '\n';
+      doc.pushText(in.string_view());
    }
 };
-
 
 template <>
 struct Action<Paragraph>
 {
    template <typename Input>
-   static void apply(const Input& in, sam2::Document& /* doc */)
+   static void apply(const Input& /* in */, sam2::Document& doc)
    {
-      std::cerr << "Paragraph: " << in.string() << '\n';
+      doc.pushParagraph();
    }
 };
 

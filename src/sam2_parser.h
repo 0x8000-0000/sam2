@@ -28,19 +28,28 @@ class Block
 
 class Document
 {
-   public:
-      size_t getBlockCount() const noexcept
-      {
-         return m_blocks.size();
-      }
+public:
+   size_t getBlockCount() const noexcept
+   {
+      return m_blocks.size();
+   }
 
-   private:
-      std::vector<Block> m_blocks;
+   void pushText(std::string_view segment)
+   {
+      m_paragraphAccumulator.push_back(segment);
+   }
+
+   void pushParagraph();
+
+private:
+   std::vector<Block> m_blocks;
+
+   std::vector<std::string_view> m_paragraphAccumulator;
+
+   std::vector<std::vector<char>> m_paragraphs;
 };
 
 Document parse(std::string_view input);
 } // namespace sam2
-
-
 
 #endif // SAM2_PARSER_H_INCLUDED
