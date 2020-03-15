@@ -69,7 +69,7 @@ std::optional<std::string> sam2::Normalizer::Accumulator::pushLine(size_t indent
       {
          // shortcut; most indents go back just one level
          currentIndent = indent;
-         output.write(k_indentMarker.data(), k_indentMarker.size());
+         output.write(k_deindentMarker.data(), k_deindentMarker.size());
          indents.pop_back();
       }
       else
@@ -86,7 +86,8 @@ std::optional<std::string> sam2::Normalizer::Accumulator::pushLine(size_t indent
 
          if (*iter != indent)
          {
-            return fmt::format("Excessive de-indent; current level: {}; observed: {}; expected: {}", currentIndent, indent, *iter);
+            return fmt::format(
+               "Excessive de-indent; current level: {}; observed: {}; expected: {}", currentIndent, indent, *iter);
          }
 
          const auto deindentLevels = std::distance(iter, indents.cend());
@@ -115,6 +116,17 @@ std::optional<std::string> sam2::Normalizer::Accumulator::pushLine(size_t indent
    output.put('\n');
 
    return std::nullopt;
+}
+
+void sam2::Normalizer::Accumulator::flush()
+{
+   pushLine(0, nullptr, 0);
+
+   const auto deindent = indents.size();
+   for (size_t ii = 0; ii < deindent; ++ii)
+   {
+      output.write(k_deindentMarker.data(), k_deindentMarker.size());
+   }
 }
 
 void sam2::Normalizer::pushLine(size_t lineNumber, size_t indent, const char* base, size_t length)
@@ -230,7 +242,7 @@ size_t sam2::Normalizer::normalize(std::istream& input)
       }
    }
 
-   pushLine(lineNumber, 0, nullptr, 0);
+   m_accumulator.flush();
 
    return count;
 }

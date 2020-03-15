@@ -53,6 +53,7 @@ private:
       bool                lastLineWasEmpty = false;
 
       std::optional<std::string> pushLine(size_t indent, const char* base, size_t length);
+      void flush();
 
       static constexpr std::array<char, 3> k_indentMarker   = {'{', '{', '\n'};
       static constexpr std::array<char, 3> k_deindentMarker = {'}', '}', '\n'};

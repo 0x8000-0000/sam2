@@ -1,0 +1,13 @@
+section: One
+
+   Paragraph one in section one.
+
+   Paragraph two in section one.
+
+Also a top-level paragraph.
+
+section: Two
+
+   Some paragraph.
+
+   In the second section. More text.

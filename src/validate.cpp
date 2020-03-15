@@ -29,16 +29,23 @@ int main(int argc, char* argv[])
       return 1;
    }
 
-   std::ifstream input{argv[1]};
+   std::ifstream      input{argv[1]};
    std::ostringstream dedentStream;
 
    sam2::Normalizer normalizer{dedentStream};
 
    normalizer.normalize(input);
 
-   const auto doc = sam2::parse(dedentStream.str());
+   try
+   {
+      const auto doc = sam2::parse(dedentStream.str());
 
-   std::cerr << "Found " << doc.getBlockCount() << " top level blocks\n";
+      std::cerr << "Found " << doc.getBlockCount() << " top level blocks\n";
+   }
+   catch (const std::runtime_error& re)
+   {
+      std::cerr << "Exception: " << re.what() << std::endl;
+   }
 
    return 0;
 }

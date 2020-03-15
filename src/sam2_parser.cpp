@@ -14,10 +14,13 @@
    limitations under the License.
 */
 
+#define MANUAL_TRACE
+
 #include "sam2_parser.h"
-#include "tao/pegtl/ascii.hpp"
 
 #include <tao/pegtl.hpp>
+#include <tao/pegtl/ascii.hpp>
+#include <tao/pegtl/contrib/tracer.hpp>
 
 #include <fmt/core.h>
 
@@ -48,23 +51,35 @@ struct Text : pegtl::plus<pegtl::sor<pegtl::ascii::alnum, pegtl::range<0x2b, 0x2
 {
 };
 
-struct Paragraph : pegtl::seq<pegtl::plus<pegtl::seq<Text, NewLine>>, NewLine>
+struct Paragraph : pegtl::seq<WhiteSpace, pegtl::plus<pegtl::seq<Text, WhiteSpace, NewLine>>, NewLine>
 {
 };
 
 struct Block;
 
-struct BlockContent : pegtl::seq<BlockStart, pegtl::star<pegtl::sor<Block, Paragraph>>, BlockEnd>
+struct Content : pegtl::star<pegtl::sor<Block, Paragraph>>
 {
 };
 
-struct Block : pegtl::seq<pegtl::identifier,
-                          pegtl::one<':'>,
+struct IndentedBlock : pegtl::seq<BlockStart, Content, BlockEnd>
+{
+};
+
+struct BlockIdentifier : pegtl::seq<pegtl::identifier, pegtl::one<':'>>
+{
+};
+
+struct BlockDescription : pegtl::opt<Text>
+{
+};
+
+struct Block : pegtl::seq<WhiteSpace,
+                          BlockIdentifier,
                           WhiteSpace,
-                          pegtl::opt<Text>,
-                          NewLine,
-                          pegtl::opt<BlockContent>,
-                          NewLine>
+                          BlockDescription,
+                          WhiteSpace,
+                          pegtl::plus<NewLine>,
+                          pegtl::opt<IndentedBlock>>
 {
 };
 
@@ -76,7 +91,7 @@ struct BlockInsertion : pegtl::seq<InsertionMarker, ExternalResource>
 {
 };
 
-struct Grammar : pegtl::seq<pegtl::star<pegtl::sor<Paragraph, Block>>, pegtl::eof>
+struct Grammar : pegtl::seq<Content, pegtl::eof>
 {
 };
 
@@ -91,6 +106,11 @@ struct Action<Text>
    template <typename Input>
    static void apply(const Input& in, sam2::Document& doc)
    {
+#ifdef MANUAL_TRACE
+      std::cerr << "Text: " << in.string_view() << '\n';
+#else
+      (void)in;
+#endif
       doc.pushText(in.string_view());
    }
 };
@@ -106,7 +126,7 @@ struct Action<Paragraph>
 };
 
 template <>
-struct Action<pegtl::identifier>
+struct Action<BlockIdentifier>
 {
    template <typename Input>
    static void apply(const Input& in, sam2::Document& doc)
@@ -116,12 +136,61 @@ struct Action<pegtl::identifier>
 };
 
 template <>
+struct Action<BlockDescription>
+{
+   template <typename Input>
+   static void apply(const Input& in, sam2::Document& doc)
+   {
+      doc.observeDescription(in.string_view());
+   }
+};
+
+template <>
+struct Action<BlockStart>
+{
+   static void apply0(sam2::Document& doc)
+   {
+      std::cerr << "BlockStart\n";
+      doc.startBlock();
+   }
+};
+
+template <>
+struct Action<BlockEnd>
+{
+   static void apply0(sam2::Document& doc)
+   {
+      std::cerr << "BlockEnd\n";
+      doc.endBlock();
+   }
+};
+
+template <>
 struct Action<Block>
 {
    template <typename Input>
-   static void apply(const Input& /* in */, sam2::Document& doc)
+   static void apply(const Input& in, sam2::Document& doc)
    {
+#ifdef MANUAL_TRACE
+      std::cerr << "Block: " << in.size() << '\n';
+#else
+      (void)in;
+#endif
       doc.pushBlock();
+   }
+};
+
+template <>
+struct Action<Content>
+{
+   template <typename Input>
+   static void apply(const Input& in, sam2::Document& /* doc */)
+   {
+#ifdef MANUAL_TRACE
+      std::cerr << "Content: " << in.size() << '\n';
+#else
+      (void)in;
+#endif
    }
 };
 
@@ -135,11 +204,24 @@ sam2::Document sam2::parse(std::string_view input)
 
    try
    {
-      pegtl::parse<Grammar, Action>(in, doc);
+      auto result = pegtl::parse<Grammar, Action /*, pegtl::tracer */>(in, doc);
+      if (result)
+      {
+         std::cerr << "Parse succeeded!\n";
+      }
+      else
+      {
+         std::cerr << "Parse failed\n";
+      }
    }
    catch (const tao::pegtl::parse_error& parseError)
    {
       throw std::runtime_error(fmt::format("Failed to parse input: {}", parseError.std::exception::what()));
+   }
+   catch (...)
+   {
+      std::cerr << "Unexpected error" << std::endl;
+      throw std::runtime_error("Unexpected error");
    }
 
    return doc;

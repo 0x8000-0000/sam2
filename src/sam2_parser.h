@@ -24,20 +24,39 @@
 
 namespace sam2
 {
+
+class Paragraph;
+
 class Block
 {
 public:
-   Block(std::string_view type, const std::vector<std::string_view>& description) : m_type{type}
+   using Element = std::variant<Block, Paragraph>;
+
+   Block(std::string&& type, std::string&& description, std::vector<Element>&& elements)
    {
-      if (!description.empty())
-      {
-         m_description = std::string(description.back());
-      }
+      std::swap(m_type, type);
+      std::swap(m_description, description);
+      std::swap(m_elements, elements);
+   }
+
+   void setContents() noexcept
+   {
+   }
+
+   const std::string& getType() const noexcept
+   {
+      return m_type;
+   }
+
+   const std::string& getDescription() const noexcept
+   {
+      return m_description;
    }
 
 private:
-   std::string m_type;
-   std::string m_description;
+   std::string          m_type;
+   std::string          m_description;
+   std::vector<Element> m_elements;
 };
 
 class Paragraph
@@ -75,18 +94,23 @@ public:
       m_currentIdentifier = segment;
    }
 
+   void observeDescription(std::string_view segment)
+   {
+      m_currentDescription = segment;
+   }
+
    void pushBlock();
 
-private:
-   using Element = std::variant<Block, Paragraph>;
+   void startBlock() {}
+   void endBlock() {}
 
+private:
    std::vector<std::string_view> m_textAccumulator;
 
-   std::vector<std::vector<char>> m_paragraphs;
+   std::string m_currentIdentifier;
+   std::string m_currentDescription;
 
-   std::string_view m_currentIdentifier;
-
-   std::vector<Element> m_elements;
+   std::vector<Block::Element> m_elements;
 };
 
 Document parse(std::string_view input);

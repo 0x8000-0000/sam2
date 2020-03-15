@@ -17,6 +17,7 @@
 #include "sam2_parser.h"
 
 #include <algorithm>
+#include <iostream>
 #include <numeric>
 #include <string_view>
 
@@ -45,7 +46,11 @@ void sam2::Document::pushParagraph()
 
 void sam2::Document::pushBlock()
 {
-   m_elements.emplace_back(Block{m_currentIdentifier, m_textAccumulator});
+   std::cerr << "-- Block(" << m_currentIdentifier << ", " << m_currentDescription << ")\n";
+
+   std::vector<Block::Element> newElements;
+   newElements.emplace_back(Block{std::move(m_currentIdentifier), std::move(m_currentDescription), std::move(m_elements)});
+   m_elements = std::move(newElements);
 
    m_currentIdentifier = std::string_view();
    m_textAccumulator.clear();

@@ -23,23 +23,33 @@
 #include <ios>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <sstream>
 
 
 int main(int argc, char* argv[])
 {
-   if (argc < 2)
+   if (argc < 1)
    {
-      std::cerr << "Error: input / output arguments missing\n";
+      std::cerr << "Error: input argument missing\n";
       return 1;
    }
 
+   std::ostream* output = &std::cerr;
+
+   std::unique_ptr<std::ofstream> fileOutput;
+
+   if (argc > 2)
+   {
+      fileOutput = std::make_unique<std::ofstream>(argv[2]);
+      output = fileOutput.get();
+   }
+
+   sam2::Normalizer normalizer{*output};
+
    std::ifstream input(argv[1]);
-   std::ofstream output(argv[2]);
-
-   sam2::Normalizer normalizer{output};
-
    const auto size = normalizer.normalize(input);
+   std::cerr << "-----\n";
    std::cerr << "Processed " << size << " bytes\n";
 
    return 0;
