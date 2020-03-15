@@ -17,13 +17,42 @@
 #ifndef SAM2_PARSER_H_INCLUDED
 #define SAM2_PARSER_H_INCLUDED
 
+#include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace sam2
 {
 class Block
 {
+public:
+   Block(std::string_view type, const std::vector<std::string_view>& description) : m_type{type}
+   {
+      if (!description.empty())
+      {
+         m_description = std::string(description.back());
+      }
+   }
+
+private:
+   std::string m_type;
+   std::string m_description;
+};
+
+class Paragraph
+{
+public:
+   explicit Paragraph(const std::vector<std::string_view>& segments);
+
+   Paragraph(const Paragraph& other) = default;
+   Paragraph(Paragraph&& other)      = default;
+   ~Paragraph()                      = default;
+   Paragraph& operator=(const Paragraph& other) = default;
+   Paragraph& operator=(Paragraph&& other) = default;
+
+private:
+   std::vector<char> m_text;
 };
 
 class Document
@@ -31,22 +60,33 @@ class Document
 public:
    size_t getBlockCount() const noexcept
    {
-      return m_blocks.size();
+      return m_elements.size();
    }
 
    void pushText(std::string_view segment)
    {
-      m_paragraphAccumulator.push_back(segment);
+      m_textAccumulator.push_back(segment);
    }
 
    void pushParagraph();
 
-private:
-   std::vector<Block> m_blocks;
+   void observeIdentifier(std::string_view segment)
+   {
+      m_currentIdentifier = segment;
+   }
 
-   std::vector<std::string_view> m_paragraphAccumulator;
+   void pushBlock();
+
+private:
+   using Element = std::variant<Block, Paragraph>;
+
+   std::vector<std::string_view> m_textAccumulator;
 
    std::vector<std::vector<char>> m_paragraphs;
+
+   std::string_view m_currentIdentifier;
+
+   std::vector<Element> m_elements;
 };
 
 Document parse(std::string_view input);

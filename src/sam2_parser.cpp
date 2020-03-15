@@ -28,6 +28,8 @@ namespace
 
 namespace pegtl = tao::pegtl;
 
+using WhiteSpace = pegtl::star<pegtl::one<' '>>;
+
 using NewLine = pegtl::ascii::eol;
 
 struct InsertionMarker : pegtl::rep<3, pegtl::one<'<'>>
@@ -56,19 +58,25 @@ struct BlockContent : pegtl::seq<BlockStart, pegtl::star<pegtl::sor<Block, Parag
 {
 };
 
-struct Block : pegtl::seq<pegtl::identifier, pegtl::one<':'>, pegtl::opt<Text>, NewLine, pegtl::opt<BlockContent>>
+struct Block : pegtl::seq<pegtl::identifier,
+                          pegtl::one<':'>,
+                          WhiteSpace,
+                          pegtl::opt<Text>,
+                          NewLine,
+                          pegtl::opt<BlockContent>,
+                          NewLine>
 {
 };
 
-struct Identifier : pegtl::seq<pegtl::identifier>
+struct ExternalResource : pegtl::seq<pegtl::identifier>
 {
 };
 
-struct BlockInsertion : pegtl::seq<InsertionMarker, Identifier>
+struct BlockInsertion : pegtl::seq<InsertionMarker, ExternalResource>
 {
 };
 
-struct Grammar : pegtl::seq<pegtl::star<Paragraph>, pegtl::eof>
+struct Grammar : pegtl::seq<pegtl::star<pegtl::sor<Paragraph, Block>>, pegtl::eof>
 {
 };
 
@@ -94,6 +102,26 @@ struct Action<Paragraph>
    static void apply(const Input& /* in */, sam2::Document& doc)
    {
       doc.pushParagraph();
+   }
+};
+
+template <>
+struct Action<pegtl::identifier>
+{
+   template <typename Input>
+   static void apply(const Input& in, sam2::Document& doc)
+   {
+      doc.observeIdentifier(in.string_view());
+   }
+};
+
+template <>
+struct Action<Block>
+{
+   template <typename Input>
+   static void apply(const Input& /* in */, sam2::Document& doc)
+   {
+      doc.pushBlock();
    }
 };
 

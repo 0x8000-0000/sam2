@@ -18,25 +18,35 @@
 
 #include <algorithm>
 #include <numeric>
+#include <string_view>
+
+sam2::Paragraph::Paragraph(const std::vector<std::string_view>& segments)
+{
+   size_t paragraphLength = std::accumulate(
+      segments.cbegin(), segments.cend(), size_t{0U}, [](size_t partial, const std::string_view& view) {
+         return partial + view.size();
+      });
+
+   m_text.reserve(paragraphLength + segments.size() + 1);
+   std::for_each(segments.cbegin(), segments.cend(), [this](const std::string_view& view) {
+      m_text.insert(m_text.end(), view.cbegin(), view.cend());
+      m_text.push_back(' ');
+   });
+
+   m_text.back() = '\0';
+}
 
 void sam2::Document::pushParagraph()
 {
-   size_t paragraphLength =
-      std::accumulate(m_paragraphAccumulator.cbegin(),
-                      m_paragraphAccumulator.cend(),
-                      size_t{0U},
-                      [](size_t partial, const std::string_view& view) { return partial + view.size(); });
+   m_elements.emplace_back(Paragraph{m_textAccumulator});
 
-   std::vector<char> paragraph;
-   paragraph.reserve(paragraphLength + m_paragraphAccumulator.size() + 1);
-   std::for_each(
-      m_paragraphAccumulator.cbegin(), m_paragraphAccumulator.cend(), [&paragraph](const std::string_view& view) {
-         paragraph.insert(paragraph.end(), view.cbegin(), view.cend());
-         paragraph.push_back(' ');
-      });
+   m_textAccumulator.clear();
+}
 
-   paragraph.back() = '\0';
-   m_paragraphs.push_back(paragraph);
+void sam2::Document::pushBlock()
+{
+   m_elements.emplace_back(Block{m_currentIdentifier, m_textAccumulator});
 
-   m_paragraphAccumulator.clear();
+   m_currentIdentifier = std::string_view();
+   m_textAccumulator.clear();
 }
