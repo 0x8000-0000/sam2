@@ -230,5 +230,7 @@ size_t sam2::Normalizer::normalize(std::istream& input)
       }
    }
 
+   pushLine(lineNumber, 0, nullptr, 0);
+
    return count;
 }

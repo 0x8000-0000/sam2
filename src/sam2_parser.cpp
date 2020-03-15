@@ -15,27 +15,87 @@
 */
 
 #include "sam2_parser.h"
+#include "tao/pegtl/ascii.hpp"
 
 #include <tao/pegtl.hpp>
 
 #include <fmt/core.h>
+
+#include <iostream>
 
 namespace
 {
 
 namespace pegtl = tao::pegtl;
 
-struct block : pegtl::plus<pegtl::ascii::space>
+using NewLine = pegtl::ascii::eol;
+
+struct InsertionMarker : pegtl::rep<3, pegtl::one<'<'>>
 {
 };
 
-struct grammar : pegtl::plus<block>
+struct BlockStart : pegtl::seq<pegtl::rep<2, pegtl::one<'{'>>, pegtl::opt<NewLine>>
+{
+};
+
+struct BlockEnd : pegtl::seq<pegtl::rep<2, pegtl::one<'}'>>, pegtl::opt<NewLine>>
+{
+};
+
+struct Text : pegtl::plus<pegtl::sor<pegtl::ascii::alnum, pegtl::range<0x2b, 0x2f>, pegtl::one<' '>>>
+{
+};
+
+struct Paragraph : pegtl::seq<pegtl::plus<pegtl::seq<Text, NewLine>>, NewLine>
+{
+};
+
+struct Block;
+
+struct BlockContent : pegtl::seq<BlockStart, pegtl::star<pegtl::sor<Block, Paragraph>>, BlockEnd>
+{
+};
+
+struct Block : pegtl::seq<pegtl::identifier, pegtl::one<':'>, pegtl::opt<Text>, NewLine, pegtl::opt<BlockContent>>
+{
+};
+
+struct Identifier : pegtl::seq<pegtl::identifier>
+{
+};
+
+struct BlockInsertion : pegtl::seq<InsertionMarker, Identifier>
+{
+};
+
+struct Grammar : pegtl::seq<pegtl::star<Paragraph>, pegtl::eof>
 {
 };
 
 template <typename Rule>
-struct action
+struct Action
 {
+};
+
+template <>
+struct Action<Text>
+{
+   template <typename Input>
+   static void apply(const Input& in, sam2::Document& /* doc */)
+   {
+      std::cerr << "Text: " << in.string() << '\n';
+   }
+};
+
+
+template <>
+struct Action<Paragraph>
+{
+   template <typename Input>
+   static void apply(const Input& in, sam2::Document& /* doc */)
+   {
+      std::cerr << "Paragraph: " << in.string() << '\n';
+   }
 };
 
 } // namespace
@@ -48,7 +108,7 @@ sam2::Document sam2::parse(std::string_view input)
 
    try
    {
-      pegtl::parse<grammar, action>(in, doc);
+      pegtl::parse<Grammar, Action>(in, doc);
    }
    catch (const tao::pegtl::parse_error& parseError)
    {
