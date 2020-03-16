@@ -17,6 +17,8 @@
 #ifndef SAM2_PARSER_H_INCLUDED
 #define SAM2_PARSER_H_INCLUDED
 
+#include <algorithm>
+#include <ostream>
 #include <stack>
 #include <string>
 #include <string_view>
@@ -52,6 +54,12 @@ public:
    const std::string& getDescription() const noexcept
    {
       return m_description;
+   }
+
+   template <typename F>
+   void forEachElement(F func) const
+   {
+      std::for_each(m_elements.cbegin(), m_elements.cend(), [func](const Block::Element& elem) { func(elem); });
    }
 
 private:
@@ -103,6 +111,12 @@ public:
    void startBlock();
    void finishBlock();
 
+   template <typename F>
+   void forEachElement(F func) const
+   {
+      std::for_each(m_elements.cbegin(), m_elements.cend(), [func](const Block::Element& elem) { func(elem); });
+   }
+
 private:
    std::vector<std::string_view> m_textAccumulator;
 
@@ -118,5 +132,7 @@ private:
 
 Document parse(std::string_view input);
 } // namespace sam2
+
+std::ostream& operator<<(std::ostream& os, const sam2::Document& doc);
 
 #endif // SAM2_PARSER_H_INCLUDED

@@ -41,6 +41,8 @@ int main(int argc, char* argv[])
       const auto doc = sam2::parse(dedentStream.str());
 
       std::cerr << "Found " << doc.getBlockCount() << " top level blocks\n";
+
+      std::cerr << doc << "\n";
    }
    catch (const std::runtime_error& re)
    {

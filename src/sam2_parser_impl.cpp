@@ -77,3 +77,9 @@ void sam2::Document::finishBlock()
    m_currentDescription = std::string_view();
    m_textAccumulator.clear();
 }
+
+std::ostream& operator<<(std::ostream& os, const sam2::Document& doc)
+{
+   doc.forEachElement([&os](const sam2::Block::Element& elem) { os << elem.index(); });
+   return os;
+}
