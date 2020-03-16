@@ -156,16 +156,6 @@ struct Action<BlockStart>
 };
 
 template <>
-struct Action<BlockEnd>
-{
-   static void apply0(sam2::Document& doc)
-   {
-      std::cerr << "BlockEnd\n";
-      doc.endBlock();
-   }
-};
-
-template <>
 struct Action<Block>
 {
    template <typename Input>
@@ -176,7 +166,7 @@ struct Action<Block>
 #else
       (void)in;
 #endif
-      doc.pushBlock();
+      doc.finishBlock();
    }
 };
 

@@ -44,14 +44,36 @@ void sam2::Document::pushParagraph()
    m_textAccumulator.clear();
 }
 
-void sam2::Document::pushBlock()
+void sam2::Document::startBlock()
 {
-   std::cerr << "-- Block(" << m_currentIdentifier << ", " << m_currentDescription << ")\n";
+   m_identifierStack.push(std::move(m_currentIdentifier));
+   m_currentIdentifier = std::string();
 
-   std::vector<Block::Element> newElements;
-   newElements.emplace_back(Block{std::move(m_currentIdentifier), std::move(m_currentDescription), std::move(m_elements)});
-   m_elements = std::move(newElements);
+   m_descriptionStack.push(std::move(m_currentDescription));
+   m_currentDescription = std::string();
 
-   m_currentIdentifier = std::string_view();
+   m_elementStack.push(std::move(m_elements));
+   m_elements = std::vector<Block::Element>();
+}
+
+void sam2::Document::finishBlock()
+{
+   std::string identifier;
+   std::swap(identifier, m_identifierStack.top());
+   std::string description;
+   std::swap(description, m_descriptionStack.top());
+
+   std::cerr << "-- Block(" << identifier << ", " << description << ")\n";
+
+   m_identifierStack.pop();
+   m_descriptionStack.pop();
+
+   m_elementStack.top().emplace_back(Block{std::move(identifier), std::move(description), std::move(m_elements)});
+
+   std::swap(m_elements, m_elementStack.top());
+   m_elementStack.pop();
+
+   m_currentIdentifier  = std::string_view();
+   m_currentDescription = std::string_view();
    m_textAccumulator.clear();
 }

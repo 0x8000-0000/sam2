@@ -17,6 +17,7 @@
 #ifndef SAM2_PARSER_H_INCLUDED
 #define SAM2_PARSER_H_INCLUDED
 
+#include <stack>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -99,18 +100,20 @@ public:
       m_currentDescription = segment;
    }
 
-   void pushBlock();
-
-   void startBlock() {}
-   void endBlock() {}
+   void startBlock();
+   void finishBlock();
 
 private:
    std::vector<std::string_view> m_textAccumulator;
 
-   std::string m_currentIdentifier;
-   std::string m_currentDescription;
+   std::stack<std::string> m_identifierStack;
+   std::string             m_currentIdentifier;
 
-   std::vector<Block::Element> m_elements;
+   std::stack<std::string> m_descriptionStack;
+   std::string             m_currentDescription;
+
+   std::stack<std::vector<Block::Element>> m_elementStack;
+   std::vector<Block::Element>             m_elements;
 };
 
 Document parse(std::string_view input);
