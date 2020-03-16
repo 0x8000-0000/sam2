@@ -63,7 +63,9 @@ void sam2::Document::finishBlock()
    std::string description;
    std::swap(description, m_descriptionStack.top());
 
+#ifdef MANUAL_TRACE
    std::cerr << "-- Block(" << identifier << ", " << description << ")\n";
+#endif
 
    m_identifierStack.pop();
    m_descriptionStack.pop();
@@ -78,8 +80,58 @@ void sam2::Document::finishBlock()
    m_textAccumulator.clear();
 }
 
+namespace
+{
+class StreamPrinter
+{
+public:
+   explicit StreamPrinter(std::ostream& os) : m_os{os}
+   {
+   }
+
+   void increaseLevel() noexcept
+   {
+      ++m_level;
+   }
+
+   void decreaseLevel() noexcept
+   {
+      --m_level;
+   }
+
+   void printIndent() const noexcept
+   {
+      for (int ii = 0; ii < m_level; ++ii)
+      {
+         m_os << "   ";
+      }
+   }
+
+   void operator()(const sam2::Paragraph& para)
+   {
+      printIndent();
+      m_os << para.getText() << "\n\n";
+   }
+
+   void operator()(const sam2::Block& block)
+   {
+      printIndent();
+      m_os << block.getType() << " " << block.getDescription() << "\n\n";
+      increaseLevel();
+      block.forEachElement(*this);
+      decreaseLevel();
+      m_os << '\n';
+   }
+
+private:
+   std::ostream& m_os;
+   int           m_level = 0;
+};
+} // namespace
+
 std::ostream& operator<<(std::ostream& os, const sam2::Document& doc)
 {
-   doc.forEachElement([&os](const sam2::Block::Element& elem) { os << elem.index(); });
+   StreamPrinter printer(os);
+   doc.forEachElement(printer);
    return os;
 }

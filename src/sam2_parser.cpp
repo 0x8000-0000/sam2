@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#define MANUAL_TRACE
+// #define MANUAL_TRACE
 
 #include "sam2_parser.h"
 
@@ -150,7 +150,9 @@ struct Action<BlockStart>
 {
    static void apply0(sam2::Document& doc)
    {
+#ifdef MANUAL_TRACE
       std::cerr << "BlockStart\n";
+#endif
       doc.startBlock();
    }
 };

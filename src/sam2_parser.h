@@ -56,10 +56,12 @@ public:
       return m_description;
    }
 
-   template <typename F>
-   void forEachElement(F func) const
+   template <typename Visitor>
+   void forEachElement(Visitor visitor) const
    {
-      std::for_each(m_elements.cbegin(), m_elements.cend(), [func](const Block::Element& elem) { func(elem); });
+      std::for_each(m_elements.cbegin(), m_elements.cend(), [&visitor](const Block::Element& elem) {
+         std::visit(visitor, elem);
+      });
    }
 
 private:
@@ -78,6 +80,11 @@ public:
    ~Paragraph()                      = default;
    Paragraph& operator=(const Paragraph& other) = default;
    Paragraph& operator=(Paragraph&& other) = default;
+
+   std::string_view getText() const
+   {
+      return std::string_view(m_text.data(), m_text.size() - 1);
+   }
 
 private:
    std::vector<char> m_text;
@@ -111,10 +118,12 @@ public:
    void startBlock();
    void finishBlock();
 
-   template <typename F>
-   void forEachElement(F func) const
+   template <typename Visitor>
+   void forEachElement(Visitor visitor) const
    {
-      std::for_each(m_elements.cbegin(), m_elements.cend(), [func](const Block::Element& elem) { func(elem); });
+      std::for_each(m_elements.cbegin(), m_elements.cend(), [&visitor](const Block::Element& elem) {
+         std::visit(visitor, elem);
+      });
    }
 
 private:

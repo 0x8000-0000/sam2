@@ -19,6 +19,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 int main(int argc, char* argv[])
@@ -36,13 +37,23 @@ int main(int argc, char* argv[])
 
    normalizer.normalize(input);
 
+   std::ostream* output = &std::cout;
+
+   std::unique_ptr<std::ofstream> fileOutput;
+
+   if (argc > 2)
+   {
+      fileOutput = std::make_unique<std::ofstream>(argv[2]);
+      output     = fileOutput.get();
+   }
+
    try
    {
       const auto doc = sam2::parse(dedentStream.str());
 
       std::cerr << "Found " << doc.getBlockCount() << " top level blocks\n";
 
-      std::cerr << doc << "\n";
+      *output << doc << "\n";
    }
    catch (const std::runtime_error& re)
    {
