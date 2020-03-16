@@ -51,7 +51,11 @@ struct Text : pegtl::plus<pegtl::sor<pegtl::ascii::alnum, pegtl::range<0x2b, 0x2
 {
 };
 
-struct Paragraph : pegtl::seq<WhiteSpace, pegtl::plus<pegtl::seq<Text, WhiteSpace, NewLine>>, NewLine>
+struct ParagraphText: Text
+{
+};
+
+struct Paragraph : pegtl::seq<WhiteSpace, pegtl::plus<pegtl::seq<ParagraphText, WhiteSpace, NewLine>>, NewLine>
 {
 };
 
@@ -101,7 +105,7 @@ struct Action
 };
 
 template <>
-struct Action<Text>
+struct Action<ParagraphText>
 {
    template <typename Input>
    static void apply(const Input& in, sam2::Document& doc)
