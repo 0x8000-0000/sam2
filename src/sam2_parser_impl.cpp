@@ -17,6 +17,7 @@
 #include "sam2_parser.h"
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <numeric>
 #include <string_view>
@@ -58,22 +59,35 @@ void sam2::Document::startBlock()
 
 void sam2::Document::finishBlock()
 {
-   std::string identifier;
-   std::swap(identifier, m_identifierStack.top());
-   std::string description;
-   std::swap(description, m_descriptionStack.top());
+   if (!m_identifierStack.empty())
+   {
+      std::swap(m_currentIdentifier, m_identifierStack.top());
+      std::swap(m_currentDescription, m_descriptionStack.top());
+      m_identifierStack.pop();
+      m_descriptionStack.pop();
+   }
+   else
+   {
+      assert(m_elementStack.empty());
+   }
 
 #ifdef MANUAL_TRACE
-   std::cerr << "-- Block(" << identifier << ", " << description << ")\n";
+   std::cerr << "-- Block(" << m_currentIdentifier << ", " << m_currentDescription << ")\n";
 #endif
 
-   m_identifierStack.pop();
-   m_descriptionStack.pop();
+   if (!m_elementStack.empty())
+   {
+      m_elementStack.top().emplace_back(
+         Block{std::move(m_currentIdentifier), std::move(m_currentDescription), std::move(m_elements)});
 
-   m_elementStack.top().emplace_back(Block{std::move(identifier), std::move(description), std::move(m_elements)});
-
-   std::swap(m_elements, m_elementStack.top());
-   m_elementStack.pop();
+      std::swap(m_elements, m_elementStack.top());
+      m_elementStack.pop();
+   }
+   else
+   {
+      m_elements.emplace_back(
+         Block{std::move(m_currentIdentifier), std::move(m_currentDescription), std::vector<Block::Element>()});
+   }
 
    m_currentIdentifier  = std::string_view();
    m_currentDescription = std::string_view();
