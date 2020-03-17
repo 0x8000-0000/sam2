@@ -26,7 +26,6 @@
 #include <memory>
 #include <sstream>
 
-
 int main(int argc, char* argv[])
 {
    if (argc < 1)
@@ -42,12 +41,18 @@ int main(int argc, char* argv[])
    if (argc > 2)
    {
       fileOutput = std::make_unique<std::ofstream>(argv[2]);
-      output = fileOutput.get();
+      output     = fileOutput.get();
    }
 
    sam2::Normalizer normalizer{*output};
 
    std::ifstream input(argv[1]);
+   if (!input)
+   {
+      std::cerr << "Cannot open input file " << argv[1] << '\n';
+      return 2;
+   }
+
    const auto size = normalizer.normalize(input);
    std::cerr << "-----\n";
    std::cerr << "Processed " << size << " bytes\n";

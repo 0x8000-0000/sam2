@@ -30,7 +30,13 @@ int main(int argc, char* argv[])
       return 1;
    }
 
-   std::ifstream      input{argv[1]};
+   std::ifstream input{argv[1]};
+   if (!input)
+   {
+      std::cerr << "Cannot open input file " << argv[1] << '\n';
+      return 2;
+   }
+
    std::ostringstream dedentStream;
 
    sam2::Normalizer normalizer{dedentStream};
