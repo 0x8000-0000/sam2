@@ -26,7 +26,7 @@
 #include <iterator>
 #include <sstream>
 
-std::optional<std::string> sam2::Normalizer::Accumulator::pushLine(size_t indent, const char* base, size_t length)
+std::optional<std::string> samx::Normalizer::Accumulator::pushLine(size_t indent, const char* base, size_t length)
 {
    if (length == 0)
    {
@@ -118,7 +118,7 @@ std::optional<std::string> sam2::Normalizer::Accumulator::pushLine(size_t indent
    return std::nullopt;
 }
 
-void sam2::Normalizer::Accumulator::flush()
+void samx::Normalizer::Accumulator::flush()
 {
    pushLine(0, nullptr, 0);
 
@@ -129,7 +129,7 @@ void sam2::Normalizer::Accumulator::flush()
    }
 }
 
-void sam2::Normalizer::pushLine(size_t lineNumber, size_t indent, const char* base, size_t length)
+void samx::Normalizer::pushLine(size_t lineNumber, size_t indent, const char* base, size_t length)
 {
    const auto err = m_accumulator.pushLine(indent, base, length);
    if (err)
@@ -138,7 +138,7 @@ void sam2::Normalizer::pushLine(size_t lineNumber, size_t indent, const char* ba
    }
 }
 
-size_t sam2::Normalizer::normalize(std::istream& input)
+size_t samx::Normalizer::normalize(std::istream& input)
 {
    std::vector<char> buffer(/* __n = */ k_BufferSize, /* __value = */ '\0');
 

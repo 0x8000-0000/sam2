@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "sam2_parser.h"
+#include "samx_parser.h"
 
 #include <algorithm>
 #include <cassert>
@@ -22,7 +22,7 @@
 #include <numeric>
 #include <string_view>
 
-sam2::Paragraph::Paragraph(const std::vector<std::string_view>& segments)
+samx::Paragraph::Paragraph(const std::vector<std::string_view>& segments)
 {
    size_t paragraphLength = std::accumulate(
       segments.cbegin(), segments.cend(), size_t{0U}, [](size_t partial, const std::string_view& view) {
@@ -38,14 +38,14 @@ sam2::Paragraph::Paragraph(const std::vector<std::string_view>& segments)
    m_text.back() = '\0';
 }
 
-void sam2::Document::pushParagraph()
+void samx::Document::pushParagraph()
 {
    m_elements.emplace_back(Paragraph{m_textAccumulator});
 
    m_textAccumulator.clear();
 }
 
-void sam2::Document::startBlock()
+void samx::Document::startBlock()
 {
    m_identifierStack.push(std::move(m_currentIdentifier));
    m_currentIdentifier = std::string();
@@ -57,7 +57,7 @@ void sam2::Document::startBlock()
    m_elements = std::vector<Block::Element>();
 }
 
-void sam2::Document::finishBlock()
+void samx::Document::finishBlock()
 {
    if (!m_identifierStack.empty())
    {
@@ -121,13 +121,13 @@ public:
       }
    }
 
-   void operator()(const sam2::Paragraph& para)
+   void operator()(const samx::Paragraph& para)
    {
       printIndent();
       m_os << para.getText() << "\n\n";
    }
 
-   void operator()(const sam2::Block& block)
+   void operator()(const samx::Block& block)
    {
       printIndent();
       m_os << block.getType() << " " << block.getDescription() << "\n\n";
@@ -143,7 +143,7 @@ private:
 };
 } // namespace
 
-std::ostream& operator<<(std::ostream& os, const sam2::Document& doc)
+std::ostream& operator<<(std::ostream& os, const samx::Document& doc)
 {
    StreamPrinter printer(os);
    doc.forEachElement(printer);

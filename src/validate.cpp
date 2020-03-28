@@ -15,7 +15,7 @@
 */
 
 #include "normalizer.h"
-#include "sam2_parser.h"
+#include "samx_parser.h"
 
 #include <fstream>
 #include <iostream>
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 
    std::ostringstream dedentStream;
 
-   sam2::Normalizer normalizer{dedentStream};
+   samx::Normalizer normalizer{dedentStream};
 
    normalizer.normalize(input);
 
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
    try
    {
-      const auto doc = sam2::parse(dedentStream.str());
+      const auto doc = samx::parse(dedentStream.str());
 
       std::cerr << "Found " << doc.getBlockCount() << " top level blocks\n";
 

@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SAM2_PARSER_H_INCLUDED
-#define SAM2_PARSER_H_INCLUDED
+#ifndef SAMX_PARSER_H_INCLUDED
+#define SAMX_PARSER_H_INCLUDED
 
 #include <algorithm>
 #include <ostream>
@@ -25,7 +25,7 @@
 #include <variant>
 #include <vector>
 
-namespace sam2
+namespace samx
 {
 
 class Paragraph;
@@ -140,8 +140,8 @@ private:
 };
 
 Document parse(std::string_view input);
-} // namespace sam2
+} // namespace samx
 
-std::ostream& operator<<(std::ostream& os, const sam2::Document& doc);
+std::ostream& operator<<(std::ostream& os, const samx::Document& doc);
 
-#endif // SAM2_PARSER_H_INCLUDED
+#endif // SAMX_PARSER_H_INCLUDED

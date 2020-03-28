@@ -14,15 +14,15 @@
    limitations under the License.
 */
 
-#ifndef SAM2_NORMALIZER_H_INCLUDED
-#define SAM2_NORMALIZER_H_INCLUDED
+#ifndef SAMX_NORMALIZER_H_INCLUDED
+#define SAMX_NORMALIZER_H_INCLUDED
 
 #include <array>
 #include <iosfwd>
 #include <optional>
 #include <vector>
 
-namespace sam2
+namespace samx
 {
 
 class Normalizer
@@ -66,6 +66,6 @@ private:
    Accumulator m_accumulator;
 };
 
-} // namespace sam2
+} // namespace samx
 
-#endif // SAM2_NORMALIZER_H_INCLUDED
+#endif // SAMX_NORMALIZER_H_INCLUDED

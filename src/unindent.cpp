@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
       output     = fileOutput.get();
    }
 
-   sam2::Normalizer normalizer{*output};
+   samx::Normalizer normalizer{*output};
 
    std::ifstream input(argv[1]);
    if (!input)

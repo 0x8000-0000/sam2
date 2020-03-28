@@ -1,9 +1,10 @@
-sam2
+SAMx
 ====
 
 Semantic Authoring Markdown
 
-Implementation of a SAM toolset in C++17 using a [Parsing Expression Grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar).
+Implementation of a SAM toolset in C++17 using a
+[Parsing Expression Grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar).
 
 Please see [SAM Documentation](https://mbakeranalecta.github.io/sam/) for 
 an overview and scope of SAM. Please refer to
@@ -20,6 +21,15 @@ Third party components are included as submodules:
    * [{fmt}](https://github.com/fmtlib/fmt)
    * [GoogleTest](https://github.com/google/googletest)
 
+What's the difference between SAM and SAMx?
+-------------------------------------------
+
+SAM is Mark Baker's original implementation, written in Python using a
+hand-written parser.
+
+SAMx is an separate implementation in C++ using a parser generator thus
+intending to formalize the grammar. Also this implementation will experiment
+with more complex conditions attached to various flows and other elements.
 
 License for sam
 ---------------
@@ -27,7 +37,7 @@ License for sam
 [Original SAM code is available](https://github.com/mbakeranalecta/sam/blob/master/license.txt)
 under Apache 2.0 license or Eclipse Public License v1.0.
 
-License for sam2
+License for samx
 ----------------
 
 Copyright 2020 Florin Iucha

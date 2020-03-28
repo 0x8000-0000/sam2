@@ -1,3 +1,9 @@
+#
+# Build file for SAMx
+#
+#   Copyright 2020 Florin Iucha
+#
+
 cmake_minimum_required(VERSION 3.13.0 FATAL_ERROR)
 
 project (ftags VERSION 0.0.1 LANGUAGES CXX DESCRIPTION "SAM Parser")
@@ -5,8 +11,8 @@ project (ftags VERSION 0.0.1 LANGUAGES CXX DESCRIPTION "SAM Parser")
 set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set (CMAKE_CXX_EXTENSIONS False)
 
-option(SAM2_COVERAGE "Enable Coverage" OFF)
-option(SAM2_PROFILE "Enable Profiling" OFF)
+option(SAMx_COVERAGE "Enable Coverage" OFF)
+option(SAMx_PROFILE "Enable Profiling" OFF)
 
 #
 # Link this 'library' to set the c++ standard / compile-time options requested
@@ -15,12 +21,12 @@ add_library (project_options INTERFACE)
 
 target_compile_features (project_options INTERFACE cxx_std_17)
 
-if (SAM2_PROFILE)
+if (SAMx_PROFILE)
 target_compile_options (project_options INTERFACE -pg)
 target_link_options (project_options INTERFACE -pg)
 endif ()
 
-if (SAM2_COVERAGE)
+if (SAMx_COVERAGE)
    target_compile_options (project_options INTERFACE --coverage)
    target_link_options (project_options INTERFACE --coverage)
    # After build and test run: gcov -p -f -m -w -j -a $(find . -name \*.gcno)

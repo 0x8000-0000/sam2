@@ -16,7 +16,7 @@
 
 // #define MANUAL_TRACE
 
-#include "sam2_parser.h"
+#include "samx_parser.h"
 
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/ascii.hpp>
@@ -108,7 +108,7 @@ template <>
 struct Action<ParagraphText>
 {
    template <typename Input>
-   static void apply(const Input& in, sam2::Document& doc)
+   static void apply(const Input& in, samx::Document& doc)
    {
 #ifdef MANUAL_TRACE
       std::cerr << "Text: " << in.string_view() << '\n';
@@ -123,7 +123,7 @@ template <>
 struct Action<Paragraph>
 {
    template <typename Input>
-   static void apply(const Input& /* in */, sam2::Document& doc)
+   static void apply(const Input& /* in */, samx::Document& doc)
    {
       doc.pushParagraph();
    }
@@ -133,7 +133,7 @@ template <>
 struct Action<BlockIdentifier>
 {
    template <typename Input>
-   static void apply(const Input& in, sam2::Document& doc)
+   static void apply(const Input& in, samx::Document& doc)
    {
       doc.observeIdentifier(in.string_view());
    }
@@ -143,7 +143,7 @@ template <>
 struct Action<BlockDescription>
 {
    template <typename Input>
-   static void apply(const Input& in, sam2::Document& doc)
+   static void apply(const Input& in, samx::Document& doc)
    {
       doc.observeDescription(in.string_view());
    }
@@ -152,7 +152,7 @@ struct Action<BlockDescription>
 template <>
 struct Action<BlockStart>
 {
-   static void apply0(sam2::Document& doc)
+   static void apply0(samx::Document& doc)
    {
 #ifdef MANUAL_TRACE
       std::cerr << "BlockStart\n";
@@ -165,7 +165,7 @@ template <>
 struct Action<Block>
 {
    template <typename Input>
-   static void apply(const Input& in, sam2::Document& doc)
+   static void apply(const Input& in, samx::Document& doc)
    {
 #ifdef MANUAL_TRACE
       std::cerr << "Block: " << in.size() << '\n';
@@ -180,7 +180,7 @@ template <>
 struct Action<Content>
 {
    template <typename Input>
-   static void apply(const Input& in, sam2::Document& /* doc */)
+   static void apply(const Input& in, samx::Document& /* doc */)
    {
 #ifdef MANUAL_TRACE
       std::cerr << "Content: " << in.size() << '\n';
@@ -192,9 +192,9 @@ struct Action<Content>
 
 } // namespace
 
-sam2::Document sam2::parse(std::string_view input)
+samx::Document samx::parse(std::string_view input)
 {
-   sam2::Document doc;
+   samx::Document doc;
 
    pegtl::memory_input in(input.data(), input.size(), "");
 
